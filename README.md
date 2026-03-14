@@ -1,175 +1,143 @@
-# AUTO_EDA
+# AUTO_EDA — 嘉立创EDA Pro MCP Server
 
-> AI-driven EDA automation platform — natural language to real EDA tool operations via Claude + MCP
+> 用 AI 驱动嘉立创EDA Pro，一句话完成 STM32 最小系统板全流程设计。
 
-AUTO_EDA is an open-source AI capability layer for the open-source EDA ecosystem. It bridges Claude (or any MCP-compatible AI) with real EDA tools through the [Model Context Protocol](https://modelcontextprotocol.io), enabling engineers to automate PCB design, digital IC synthesis, HDL analysis, and more through natural language.
+## 简介
 
-## What It Does
+AUTO_EDA 是一个 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) Server，专为**嘉立创EDA Pro**桌面客户端设计。
+通过 WebSocket 桥接 EDA 内部 API，让 Claude 等 AI 模型能够直接操控 EDA 软件，完成原理图绘制、PCB 布局、DRC 检查、导出制造文件等完整流程。
 
-Instead of memorizing EDA tool commands, you describe what you want:
+### 核心特性
+
+- **一句话绘板**：输入「帮我画一个 STM32F103C8T6 最小系统板」，自动完成14步全流程
+- **真实 EDA 操作**：通过官方 Extension API 操控嘉立创EDA Pro，不是截图模拟
+- **JLCPCB 直连**：BOM 含 LCSC 料号，Gerber/BOM/CPL 导出后可直接上传下单
+- **23 个 MCP 工具**：涵盖原理图、PCB、库搜索、导出全链路
+
+## 架构
 
 ```
-"Synthesize this Verilog file targeting Xilinx and show me the gate count"
-"Run DRC on my KiCad board and list all violations"
-"Check this HDL file for lint issues and undefined modules"
+Claude (AI)
+    │ MCP Protocol (stdio)
+    ▼
+auto_eda/servers/easyeda/server.py   ← Python MCP Server (23 tools)
+    │ WebSocket (ws://127.0.0.1:9050/)
+    ▼
+JLCEDA MCP Bridge 扩展               ← 嘉立创EDA Pro 内置扩展
+    │ globalThis.eda.* Extension API
+    ▼
+嘉立创EDA Pro 桌面客户端
 ```
 
-AUTO_EDA translates those instructions into real tool invocations via MCP tools.
+## 安装
 
-## MCP Servers (Phase 0)
+### 前置要求
 
-### Yosys Server — RTL Synthesis
-For open-source RTL synthesis with [Yosys](https://yosyshq.net/yosys/).
+- Python 3.11+
+- [嘉立创EDA Pro](https://lceda.cn/editor) 桌面客户端
+- JLCEDA MCP Bridge 扩展（在 EDA 扩展广场搜索安装）
 
-| Tool | Description |
-|------|-------------|
-| `synthesize` | Synthesize Verilog/SystemVerilog to gate-level netlist |
-| `rtl_stats` | Report wire/cell/memory counts at RTL level |
-| `check_design` | Check for undefined modules, multi-driven signals, combinational loops |
-| `show_schematic` | Generate DOT-format RTL schematic (renders with Graphviz) |
-| `optimize_design` | Run opt passes and report cell reduction percentage |
-
-### KiCad Server — PCB Design
-For PCB automation with [KiCad](https://www.kicad.org/) v9/v10.
-
-| Tool | Description |
-|------|-------------|
-| `get_board_info` | Read PCB metadata: dimensions, layer count, footprint count |
-| `list_components` | List all schematic components with values and footprints |
-| `get_schematic_info` | Read schematic summary: component count, net count |
-| `run_drc` | Run Design Rule Check, return violations list |
-| `run_erc` | Run Electrical Rule Check on schematic |
-| `export_bom` | Export Bill of Materials (CSV/JSON) |
-| `export_gerber` | Export Gerber manufacturing files |
-
-### Verilog Utils Server — HDL Analysis
-Language-level tools for Verilog/SystemVerilog files (no EDA tool required).
-
-| Tool | Description |
-|------|-------------|
-| `parse_verilog` | Parse HDL file, extract module definitions and port lists |
-| `extract_modules` | List all module names declared in a file |
-| `analyze_hierarchy` | Analyze module instantiation hierarchy |
-| `lint_check` | Static checks: unused ports, implicit nets, blocking assignments in sequential always |
-| `extract_ports` | Extract port directions, widths, and parameters for a specific module |
-
-## Installation
+### 安装步骤
 
 ```bash
-# Clone the repository
-git clone https://github.com/Techd81/AUTO_EDA.git
-cd AUTO_EDA
+# 1. 克隆项目
+git clone https://github.com/your-org/auto-eda.git
+cd auto-eda
 
-# Install with uv (recommended)
-uv sync --extra dev
+# 2. 安装依赖
+pip install -e .
 
-# Or with pip
-pip install -e ".[dev]"
+# 3. 在嘉立创EDA Pro 扩展管理器中：
+#    - 搜索并安装「JLCEDA MCP Bridge」
+#    - 启用扩展，开启「外部交互」权限
+
+# 4. 启动 MCP Server
+python -m auto_eda easyeda
 ```
 
-### EDA Tool Prerequisites
+### Claude Desktop 配置
 
-```bash
-# Ubuntu/Debian
-sudo apt install yosys kicad
-
-# macOS
-brew install yosys
-brew install --cask kicad
-```
-
-## Usage
-
-### Run a MCP Server
-
-```bash
-# Yosys MCP Server (stdio transport for Claude Desktop / Claude Code)
-python -m auto_eda yosys
-
-# KiCad MCP Server
-python -m auto_eda kicad
-
-# Verilog Utils MCP Server
-python -m auto_eda verilog
-```
-
-### Connect to Claude Code
-
-Add to your `.mcp.json`:
+在 `claude_desktop_config.json` 中添加：
 
 ```json
 {
   "mcpServers": {
-    "auto-eda-yosys": {
+    "auto-eda-easyeda": {
       "command": "python",
-      "args": ["-m", "auto_eda", "yosys"]
-    },
-    "auto-eda-kicad": {
-      "command": "python",
-      "args": ["-m", "auto_eda", "kicad"]
-    },
-    "auto-eda-verilog": {
-      "command": "python",
-      "args": ["-m", "auto_eda", "verilog"]
+      "args": ["-m", "auto_eda", "easyeda"]
     }
   }
 }
 ```
 
-### Run Tests
+## 使用示例
 
-```bash
-pytest tests/ -v
+### STM32 最小系统板全自动绘制
+
+打开嘉立创EDA Pro，新建空白原理图，然后对 Claude 说：
+
+```
+帮我画一个 STM32F103C8T6 最小系统板
 ```
 
-## Architecture
+Claude 将自动执行 14 步流程：
+
+| 步骤 | 操作 | 说明 |
+|------|------|------|
+| 1 | 连接检查 | 确认 EDA 客户端在线 |
+| 2 | 放置元件 | 18个器件（STM32/LDO/晶振/电容等）|
+| 3 | 电源符号 | VCC/GND/3V3/VBUS |
+| 4 | 网络标签 | SWDIO/SWDCLK/NRST/BOOT0/USART1 |
+| 5 | 连线 | 去耦电容导线 |
+| 6 | ERC检查 | 电气规则验证 |
+| 7 | 保存 | 原理图保存 |
+| 8 | 自动布局 | 原理图自动整理 |
+| 9-12 | PCB流程 | 布局/布线/铺铜/DRC |
+| 14 | 导出 | Gerber + BOM + CPL |
+
+## MCP 工具列表
+
+| 工具 | 功能 |
+|------|------|
+| `eda_ping` | 检查 EDA 连接状态 |
+| `eda_get_status` | 获取当前文档信息 |
+| `sch_place_symbol` | 放置原理图元件 |
+| `sch_add_wire` | 添加导线 |
+| `sch_add_net_label` | 添加网络标签 |
+| `sch_add_power_symbol` | 添加电源符号 |
+| `sch_run_erc` | 运行 ERC 检查 |
+| `sch_get_netlist` | 导出网表 |
+| `pcb_place_component` | PCB 放置元件 |
+| `pcb_run_drc` | 运行 DRC 检查 |
+| `export_gerber` | 导出 Gerber |
+| `export_bom` | 导出 BOM（含 LCSC 料号）|
+| `export_pick_place` | 导出贴片坐标 |
+| `draw_stm32_minimum_system` | **STM32最小系统板全流程** |
+| ...更多 | 共 23 个工具 |
+
+## 项目结构
 
 ```
 src/auto_eda/
-├── core/              # Shared foundation
-│   ├── errors.py      # EDAErrorCode hierarchy
-│   ├── process.py     # Async subprocess management with timeout
-│   ├── base_server.py # FastMCP factory + @eda_tool decorator
-│   └── result.py      # Unified success/failure response types
-├── models/            # Shared Pydantic models
+├── __main__.py
+├── core/
+│   ├── base_server.py
+│   ├── errors.py
+│   └── result.py
 └── servers/
-    ├── yosys/         # Yosys MCP Server (5 tools)
-    ├── kicad/         # KiCad MCP Server (7 tools)
-    └── verilog_utils/ # Verilog Utils MCP Server (5 tools)
+    └── easyeda/
+        ├── server.py      # 23个 MCP 工具
+        ├── bridge.py      # WebSocket 桥接服务端
+        ├── models.py      # Pydantic 数据模型
+        ├── components.py  # STM32 元件库（含 LCSC UUID）
+        └── stm32_flow.py  # 14步自动化流程
 ```
 
-**Tech stack:** Python 3.10+ · FastMCP · Pydantic · mypy strict · ruff · pytest
-
-## Roadmap
-
-| Phase | Timeline | Scope |
-|-------|----------|-------|
-| **Phase 0 (now)** | Month 1-2 | Yosys + KiCad + Verilog Utils (~17 tools) |
-| Phase 1 | Month 3-4 | Verilator + cocotb + KLayout (~30 new tools) |
-| Phase 2 | Month 5-8 | OpenROAD + ngspice + full RTL→GDSII flow |
-| Phase 3 | Month 9-12 | Visual feedback loop: screenshot → AI analysis → auto-fix |
-
-## Comparison
-
-| Feature | AUTO_EDA | MCP4EDA |
-|---------|-----------|---------|
-| PCB (KiCad) | ✅ | ❌ |
-| Digital IC (Yosys) | ✅ | ✅ |
-| SPICE simulation | Planned Phase 2 | ❌ |
-| Visual feedback loop | Planned Phase 3 | ❌ |
-| Multi-tool orchestration | ✅ | ❌ |
-| Language | Python | TypeScript |
-
-## Contributing
-
-Contributions welcome. See [`analysis/PLAN4_community_ops.md`](analysis/PLAN4_community_ops.md) for community plans.
+## 开发
 
 ```bash
-# Development setup
-uv sync --extra dev
-ruff check src/        # lint
-mypy src/              # type check
-pytest tests/ -v       # test
+pip install -e ".[dev]"
+pytest tests/ -v
 ```
 
 ## License
