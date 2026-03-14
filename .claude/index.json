@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-03-14T00:54:00+08:00",
+  "generator": "architect-scan v0.1.0",
+  "project": "AUTO_EDA",
+  "root": "D:/AUTO_EDA",
+  "scan_coverage": {
+    "total_files_estimated": 20,
+    "files_scanned": 20,
+    "coverage_percent": 100,
+    "truncated": false,
+    "truncation_reason": null
+  },
+  "ignored_stats": {
+    "ignored_patterns": ["node_modules/**", ".git/**", ".github/**", "dist/**", "build/**", ".next/**", "__pycache__/**", "*.lock", "*.log", "*.bin", "*.pdf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.mp4", "*.zip", "*.tar", "*.gz"],
+    "ignored_files_count": 0,
+    "note": "No .gitignore found; default ignore rules applied"
+  },
+  "modules": [
+    {
+      "path": "analysis/",
+      "type": "documentation",
+      "language": "Markdown",
+      "description": "技术分析与决策文档（可行性、市场、风险、差异化、技术栈、路线图）",
+      "entry_file": "analysis/CLAUDE.md",
+      "files": [
+        "analysis/A1_technical_feasibility.md",
+        "analysis/A2_market_positioning.md",
+        "analysis/A4_risk_assessment.md",
+        "analysis/A5_differentiation_strategy.md",
+        "analysis/A7_tech_stack_decision.md",
+        "analysis/A8_integration_roadmap.md",
+        "analysis/CLAUDE.md"
+      ],
+      "file_count": 7,
+      "has_tests": false,
+      "has_config": false,
+      "coverage_summary": "完整覆盖：所有 6 份分析文档全量阅读",
+      "gaps": []
+    },
+    {
+      "path": "research/",
+      "type": "documentation",
+      "language": "Markdown",
+      "description": "背景调研文档（商业EDA、开源工具、API、MCP生态、协议、AI趋势、文件格式、设计模式、工作流、竞争对手）",
+      "entry_file": "research/CLAUDE.md",
+      "files": [
+        "research/R1_commercial_eda_vendors.md",
+        "research/R2_opensource_eda_tools.md",
+        "research/R3_eda_automation_apis.md",
+        "research/R4_existing_mcp_servers.md",
+        "research/R5_mcp_architecture.md",
+        "research/R6_ai_eda_trends.md",
+        "research/R7_eda_file_formats.md",
+        "research/R8_claude_mcp_patterns.md",
+        "research/R9_eda_workflow_automation.md",
+        "research/R10_eda_llm_competitors.md",
+        "research/CLAUDE.md"
+      ],
+      "file_count": 11,
+      "has_tests": false,
+      "has_config": false,
+      "coverage_summary": "完整覆盖：所有 10 份调研文档全量阅读",
+      "gaps": []
+    },
+    {
+      "path": ".mcp.json",
+      "type": "config",
+      "language": "JSON",
+      "description": "Claude Code 项目级 MCP 配置，当前挂载 grok-search（调研搜索用）",
+      "entry_file": ".mcp.json",
+      "files": [".mcp.json"],
+      "file_count": 1,
+      "has_tests": false,
+      "has_config": true,
+      "coverage_summary": "已读取",
+      "gaps": []
+    }
+  ],
+  "root_claude_md": "CLAUDE.md",
+  "overall_gaps": [
+    "尚无源代码：项目处于研究规划阶段，src/ 目录不存在",
+    "尚无测试代码：pytest 配置和测试用例待开发启动后建立",
+    "尚无 pyproject.toml：Python 包配置待 Phase 0 开发时创建",
+    "analysis/A3 和 A6 编号缺失：文档编号预留，非错误"
+  ],
+  "next_scan_priorities": [
+    "Phase 0 启动后：扫描新建的 src/pcb_server/、src/digital_ic_server/ 源码目录",
+    "Phase 0 启动后：扫描 pyproject.toml、tests/ 目录",
+    "Phase 0 启动后：扫描 .github/workflows/ CI 配置"
+  ]
+}

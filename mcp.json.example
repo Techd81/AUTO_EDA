@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "auto-eda-yosys": {
+      "command": "python",
+      "args": ["-m", "auto_eda", "yosys"],
+      "env": {
+        "YOSYS_PATH": "yosys"
+      }
+    },
+    "auto-eda-kicad": {
+      "command": "python",
+      "args": ["-m", "auto_eda", "kicad"],
+      "env": {
+        "KICAD_CLI_PATH": "kicad-cli"
+      }
+    },
+    "auto-eda-verilog": {
+      "command": "python",
+      "args": ["-m", "auto_eda", "verilog"],
+      "env": {}
+    }
+  }
+}

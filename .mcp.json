@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "grok-search": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "D:/CClearn/GrokSearch", "grok-search"],
+      "env": {
+        "GROK_API_URL": "https://wzw.pp.ua/v1",
+        "GROK_API_KEY": "sk-Ak1YW7t9m7yf04HMvv4jTxzNosoQAvGeUgYvE80WCVmUR2WI",
+        "TAVILY_API_KEY": "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",
+        "FIRECRAWL_API_KEY": "fc-c0c432a6a6fe4e769a55e87a527b482f"
+      }
+    }
+  }
+}
