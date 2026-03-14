@@ -35,22 +35,54 @@ from .components import STM32_MIN_SYS, Component
 
 logger = logging.getLogger(__name__)
 
-# Power net placement in EDA units (0.01 inch), range ~-200 to 200
+# Power net placement in EDA units (0.01 inch), spread across schematic
 _POWER_SYMBOLS = [
-    ("VCC",  -50,  80),
-    ("GND",  -50, -80),
-    ("3V3",   50,  80),
-    ("VBUS", -50, -50),
+    ("VCC",  -300,  500),
+    ("GND",  -300, -500),
+    ("3V3",   300,  500),
+    ("VBUS", -400, -300),
 ]
 
-# Named nets to add as labels (ref, offset_x, offset_y, name)
-_NET_LABELS = [
-    ("U1",  40, -20, "SWDIO"),
-    ("U1",  40, -30, "SWDCLK"),
-    ("U1", -40,  20, "NRST"),
-    ("U1", -40,  30, "BOOT0"),
-    ("U1",  40,  20, "USART1_TX"),
-    ("U1",  40,  30, "USART1_RX"),
+# Net labels for key signals (x, y, net_name)
+# These replace wires — same net name = electrically connected
+_NET_LABELS_XY = [
+    # Power rails near MCU
+    (100,  300, "VCC"),
+    (100, -300, "GND"),
+    (-100, 300, "3V3"),
+    (-200, 300, "VBUS"),
+    # Debug interface
+    (400,  200, "SWDIO"),
+    (400,  250, "SWDCLK"),
+    (400, -200, "NRST"),
+    (400, -250, "BOOT0"),
+    # UART
+    (400,  100, "USART1_TX"),
+    (400,  150, "USART1_RX"),
+    # LDO connections
+    (-500,  150, "VCC"),
+    (-500, -150, "3V3"),
+    # Crystal
+    (550,  -200, "OSC_IN"),
+    (550,  -250, "OSC_OUT"),
+    # USB
+    (-450,  400, "VBUS"),
+    (-450,  450, "USB_DM"),
+    (-450,  500, "USB_DP"),
+    # Decoupling caps
+    (300, -400, "VCC"),
+    (400, -400, "VCC"),
+    (500, -400, "VCC"),
+    (600, -400, "VCC"),
+    (300, -450, "GND"),
+    (400, -450, "GND"),
+    (500, -450, "GND"),
+    (600, -450, "GND"),
+    # LED
+    (-650,  400, "3V3"),
+    (-650,  450, "LED"),
+    # Reset button
+    (450,  200, "NRST"),
 ]
 
 # Main power/ground traces: (net, x1, y1, x2, y2, layer, width_mil)
@@ -210,34 +242,22 @@ async def draw_minimum_system(
     # ------------------------------------------------------------------
     _notify(4, "sch_add_net_labels")
     net_ok = 0
-    for _ref, dx, dy, net_name in _NET_LABELS:
+    for x, y, net_name in _NET_LABELS_XY:
         try:
-            u1 = next((c for c in STM32_MIN_SYS if c.ref == "U1"), None)
-            x = (u1.sch_x if u1 else 4000) + dx
-            y = (u1.sch_y if u1 else 3000) + dy
             await b.eda_invoke("sch_PrimitiveAttribute.createNetLabel",
                                x, y, net_name)
             net_ok += 1
+            await b.ping()  # keepalive
         except Exception as exc:
             logger.warning("Failed to add net label %s: %s", net_name, exc)
     r.add(4, "sch_add_net_labels", True,
-          f"{net_ok}/{len(_NET_LABELS)} net labels added")
+          f"{net_ok}/{len(_NET_LABELS_XY)} net labels added")
 
     # ------------------------------------------------------------------
-    # Step 5 — Add decoupling cap wires (C1-C4 to VCC/GND pins)
+    # Step 5 — Skipped: wires replaced by net labels above
     # ------------------------------------------------------------------
     _notify(5, "sch_add_wires")
-    wire_count = 0
-    for comp in STM32_MIN_SYS:
-        if comp.ref.startswith("C") and "decoupling" in comp.description.lower():
-            try:
-                await b.eda_invoke("sch_PrimitiveWire.create",
-                                   [comp.sch_x, comp.sch_y - 50,
-                                    comp.sch_x, comp.sch_y - 150])
-                wire_count += 1
-            except Exception as exc:
-                logger.warning("Wire for %s failed: %s", comp.ref, exc)
-    r.add(5, "sch_add_wires", True, f"{wire_count} wire stubs added")
+    r.add(5, "sch_add_wires", True, "net labels used instead of wires")
 
     # ------------------------------------------------------------------
     # Step 6 — ERC check
