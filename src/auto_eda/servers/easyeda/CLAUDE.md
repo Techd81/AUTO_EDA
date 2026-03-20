@@ -89,7 +89,7 @@ Server 启动时自动在后台线程启动 WebSocket 服务端（`ws://127.0.0.
 
 ## 数据模型
 
-`models.py` 定义 46 个 Pydantic 模型（`<ToolName>Input` / `<ToolName>Result`）。所有 Result 含 `suggested_next_steps: list[str]`。共享子模型：`ComponentInfo`、`Violation`。
+`models.py` 定义 34 个 Pydantic 模型（2个共享子模型 + 16对 `<ToolName>Input`/`<ToolName>Result`）。`server.py` 额外定义 `DrawSTM32Input`/`DrawSTM32Result`。合计 36 个模型。所有 Result 含 `suggested_next_steps: list[str]`。共享子模型：`ComponentInfo`、`Violation`。
 
 ---
 
@@ -97,10 +97,10 @@ Server 启动时自动在后台线程启动 WebSocket 服务端（`ws://127.0.0.
 
 | 文件 | 测试数 | 内容 |
 |------|--------|------|
-| `test_bridge.py` | 6 | WS通信、ping、断开、ID递增 |
-| `test_stm32_flow.py` | 6 | 组件表验证、全流程happy path、ping失败中止 |
+| `test_bridge.py` | 6 | WS通信、ping、断开、ID递增（使用 _MockConn 适配 WS 服务端架构）|
+| `test_stm32_flow.py` | 8 | 组件表验证×4、全流程happy path、ping失败中止、回调覆盖、summary验证 |
 
-**已知测试问题：** `test_bridge.py` 基于旧WS客户端架构（`EDABridge(url=...)`），与当前WS服务端架构不匹配，运行会失败，需重写。
+**已知测试问题：** 全部 14 个测试通过。`_MockConn` 已适配当前 WS 服务端架构。
 
 ---
 
@@ -116,7 +116,7 @@ A: path每段必须是合法JS标识符，用点分隔，例如 `sch_PrimitiveCo
 A: `components.py` 中 C160935（SWD接头）的UUID为空字符串，stm32_flow.py 会跳过并记录警告，不影响流程继续。
 
 **Q: server.py中logger在使用前定义了吗？**
-A: 存在行序问题：`_start_ws_server_thread` 中引用了 `logger`，但 `logger` 定义在模块下方（行70）。需将 `logger` 定义移至模块顶部。
+A: 存在行序问题：`_start_ws_server_thread` 中引用了 `logger`（行61），但 `logger` 定义在行70。实际运行不阻塞（线程内异步函数延迟执行），但应修复为将 `logger` 定义移至模块顶部。
 
 ---
 
@@ -145,3 +145,4 @@ tests/test_servers/test_easyeda/
 |------|------|------|
 | 2026-03-14 | 0.1.0 | EasyEDA MCP Server完成，commit 3cad6da |
 | 2026-03-14 | 0.2.0 | 架构师增量扫描，生成完整CLAUDE.md |
+| 2026-03-15 | 0.3.0 | 深度扫描：修正模型数(36)、修正测试状态(全通过)、更新FAQ |

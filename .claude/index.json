@@ -1,91 +1,154 @@
 {
-  "generated_at": "2026-03-14T00:54:00+08:00",
-  "generator": "architect-scan v0.1.0",
+  "generated_at": "2026-03-14T03:42:17+08:00",
+  "generator": "architect-scan v0.2.0",
   "project": "AUTO_EDA",
   "root": "D:/AUTO_EDA",
   "scan_coverage": {
-    "total_files_estimated": 20,
-    "files_scanned": 20,
-    "coverage_percent": 100,
+    "total_files_estimated": 55,
+    "files_scanned": 34,
+    "coverage_percent": 62,
     "truncated": false,
-    "truncation_reason": null
+    "truncation_reason": null,
+    "note": "analysis/ and research/ docs counted but not individually read (content summarized via CLAUDE.md); scripts/ ignored per .gitignore"
   },
   "ignored_stats": {
-    "ignored_patterns": ["node_modules/**", ".git/**", ".github/**", "dist/**", "build/**", ".next/**", "__pycache__/**", "*.lock", "*.log", "*.bin", "*.pdf", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.mp4", "*.zip", "*.tar", "*.gz"],
-    "ignored_files_count": 0,
-    "note": "No .gitignore found; default ignore rules applied"
+    "ignored_patterns": [
+      "__pycache__/**", "*.py[cod]", "*.pyo", "*.egg-info/",
+      "dist/**", "build/**", ".venv/**", "venv/**",
+      ".mypy_cache/**", ".ruff_cache/**", ".pytest_cache/**",
+      "htmlcov/**", ".coverage", "coverage.xml", "*.log", ".env",
+      "project/**", ".workflow/**", "scripts/**"
+    ],
+    "ignored_dirs": ["scripts/", ".workflow/", "project/"],
+    "ignored_files_count": 12,
+    "note": "scripts/ and .workflow/ ignored per .gitignore; project/ contains EDA binary files"
   },
   "modules": [
+    {
+      "path": "src/auto_eda/core/",
+      "type": "source",
+      "language": "Python",
+      "description": "核心基础库：错误体系、异步子进程、MCP服务器工厂、结果格式化",
+      "entry_file": "src/auto_eda/core/__init__.py",
+      "key_files": [
+        "src/auto_eda/core/errors.py",
+        "src/auto_eda/core/process.py",
+        "src/auto_eda/core/base_server.py",
+        "src/auto_eda/core/result.py"
+      ],
+      "file_count": 5,
+      "has_tests": true,
+      "test_files": ["tests/test_core/test_errors.py"],
+      "has_config": false,
+      "coverage_summary": "全量读取：4个源文件全部扫描",
+      "gaps": [
+        "test_errors.py 命名不一致（TimeoutError/TOOL_EXECUTION_FAILED）需修复才能通过"
+      ]
+    },
+    {
+      "path": "src/auto_eda/servers/easyeda/",
+      "type": "source",
+      "language": "Python",
+      "description": "嘉立创EDA Pro MCP Server：23工具 + WS桥接 + STM32 14步流程",
+      "entry_file": "src/auto_eda/servers/easyeda/server.py",
+      "key_files": [
+        "src/auto_eda/servers/easyeda/server.py",
+        "src/auto_eda/servers/easyeda/bridge.py",
+        "src/auto_eda/servers/easyeda/stm32_flow.py",
+        "src/auto_eda/servers/easyeda/components.py",
+        "src/auto_eda/servers/easyeda/models.py"
+      ],
+      "file_count": 6,
+      "has_tests": true,
+      "test_files": [
+        "tests/test_servers/test_easyeda/test_bridge.py",
+        "tests/test_servers/test_easyeda/test_stm32_flow.py"
+      ],
+      "has_config": false,
+      "mcp_tools": [
+        "eda_ping", "eda_get_status",
+        "sch_get_state", "sch_place_symbol", "sch_add_wire", "sch_add_net_label",
+        "sch_add_power_symbol", "sch_run_erc", "sch_get_netlist", "sch_update_pcb",
+        "pcb_get_state", "pcb_place_component", "pcb_move_component", "pcb_route_track",
+        "pcb_create_via", "pcb_flood_fill", "pcb_run_drc", "pcb_screenshot",
+        "export_gerber", "export_bom", "export_pick_place",
+        "draw_stm32_minimum_system"
+      ],
+      "tool_count": 23,
+      "coverage_summary": "全量读取：5个源文件全部扫描",
+      "gaps": [
+        "test_bridge.py 使用旧WS客户端架构，需重写适配当前WS服务端架构",
+        "缺少 server.py 工具层端到端测试",
+        "server.py 中 logger 在使用后才定义（行序问题）"
+      ]
+    },
+    {
+      "path": "src/auto_eda/models/",
+      "type": "source",
+      "language": "Python",
+      "description": "共享 Pydantic 数据模型（当前仅 Verilog HDL 骨架）",
+      "entry_file": "src/auto_eda/models/__init__.py",
+      "key_files": ["src/auto_eda/models/verilog.py"],
+      "file_count": 2,
+      "has_tests": false,
+      "has_config": false,
+      "coverage_summary": "路径已确认，内容为骨架占位",
+      "gaps": ["verilog.py 内容未读取，Phase 1 开发时补扫"]
+    },
+    {
+      "path": "tests/",
+      "type": "tests",
+      "language": "Python",
+      "description": "pytest 测试套件：22个测试用例，全部使用 mock",
+      "file_count": 7,
+      "test_counts": {
+        "test_errors": 10,
+        "test_bridge": 6,
+        "test_stm32_flow": 6
+      },
+      "has_config": true,
+      "coverage_summary": "全量读取：conftest + 3个测试文件",
+      "gaps": [
+        "test_bridge.py 架构不匹配（WS客户端 vs 服务端），运行会失败",
+        "test_errors.py 命名不匹配，运行会失败",
+        "缺少 test_flow_aborts_on_erc_errors 完整实现"
+      ]
+    },
     {
       "path": "analysis/",
       "type": "documentation",
       "language": "Markdown",
-      "description": "技术分析与决策文档（可行性、市场、风险、差异化、技术栈、路线图）",
-      "entry_file": "analysis/CLAUDE.md",
-      "files": [
-        "analysis/A1_technical_feasibility.md",
-        "analysis/A2_market_positioning.md",
-        "analysis/A4_risk_assessment.md",
-        "analysis/A5_differentiation_strategy.md",
-        "analysis/A7_tech_stack_decision.md",
-        "analysis/A8_integration_roadmap.md",
-        "analysis/CLAUDE.md"
-      ],
-      "file_count": 7,
+      "description": "21+份技术分析决策文档",
+      "file_count": 21,
       "has_tests": false,
-      "has_config": false,
-      "coverage_summary": "完整覆盖：所有 6 份分析文档全量阅读",
+      "coverage_summary": "通过 CLAUDE.md 摘要覆盖",
       "gaps": []
     },
     {
       "path": "research/",
       "type": "documentation",
       "language": "Markdown",
-      "description": "背景调研文档（商业EDA、开源工具、API、MCP生态、协议、AI趋势、文件格式、设计模式、工作流、竞争对手）",
-      "entry_file": "research/CLAUDE.md",
-      "files": [
-        "research/R1_commercial_eda_vendors.md",
-        "research/R2_opensource_eda_tools.md",
-        "research/R3_eda_automation_apis.md",
-        "research/R4_existing_mcp_servers.md",
-        "research/R5_mcp_architecture.md",
-        "research/R6_ai_eda_trends.md",
-        "research/R7_eda_file_formats.md",
-        "research/R8_claude_mcp_patterns.md",
-        "research/R9_eda_workflow_automation.md",
-        "research/R10_eda_llm_competitors.md",
-        "research/CLAUDE.md"
-      ],
-      "file_count": 11,
+      "description": "19份背景调研文档",
+      "file_count": 19,
       "has_tests": false,
-      "has_config": false,
-      "coverage_summary": "完整覆盖：所有 10 份调研文档全量阅读",
-      "gaps": []
-    },
-    {
-      "path": ".mcp.json",
-      "type": "config",
-      "language": "JSON",
-      "description": "Claude Code 项目级 MCP 配置，当前挂载 grok-search（调研搜索用）",
-      "entry_file": ".mcp.json",
-      "files": [".mcp.json"],
-      "file_count": 1,
-      "has_tests": false,
-      "has_config": true,
-      "coverage_summary": "已读取",
+      "coverage_summary": "通过 CLAUDE.md 摘要覆盖",
       "gaps": []
     }
   ],
   "root_claude_md": "CLAUDE.md",
   "overall_gaps": [
-    "尚无源代码：项目处于研究规划阶段，src/ 目录不存在",
-    "尚无测试代码：pytest 配置和测试用例待开发启动后建立",
-    "尚无 pyproject.toml：Python 包配置待 Phase 0 开发时创建",
-    "analysis/A3 和 A6 编号缺失：文档编号预留，非错误"
+    "test_bridge.py 基于旧WS客户端架构，需重写适配当前bridge.py的WS服务端架构",
+    "test_errors.py 导入名与实现不一致（TimeoutError/TOOL_EXECUTION_FAILED），测试无法通过",
+    "src/auto_eda/models/verilog.py 内容未读取",
+    "server.py 中 logger 在模块顶部使用前未定义（_start_ws_server_thread引用了logger）",
+    "缺少 .github/workflows/ci.yml CI 配置",
+    "缺少 Dockerfile",
+    "pyproject.toml 有重复的 classifiers/dependencies 块（行87-127为旧版残留）"
   ],
   "next_scan_priorities": [
-    "Phase 0 启动后：扫描新建的 src/pcb_server/、src/digital_ic_server/ 源码目录",
-    "Phase 0 启动后：扫描 pyproject.toml、tests/ 目录",
-    "Phase 0 启动后：扫描 .github/workflows/ CI 配置"
+    "src/auto_eda/models/verilog.py — 确认骨架内容",
+    "修复 test_bridge.py 架构不匹配后重新扫描测试覆盖率",
+    "Phase 1 开始后：扫描新建的 src/auto_eda/servers/yosys/ 和 src/auto_eda/servers/kicad/",
+    ".github/workflows/ — CI 配置建立后扫描"
   ]
 }
